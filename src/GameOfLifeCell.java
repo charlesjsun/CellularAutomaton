@@ -5,6 +5,13 @@ public class GameOfLifeCell implements ICell<GameOfLifeCell>
 
 	private boolean isAlive = false;
 
+	public GameOfLifeCell makeNew(int value)
+	{
+		GameOfLifeCell c = new GameOfLifeCell();
+		c.isAlive = value == 1;
+		return c;
+	}
+
 	@Override
 	public GameOfLifeCell getNextState(CellularGrid<GameOfLifeCell> grid, int x, int y)
 	{
@@ -49,13 +56,13 @@ public class GameOfLifeCell implements ICell<GameOfLifeCell>
 	@Override
 	public void onLeftClick()
 	{
-		isAlive = !isAlive;
+		isAlive = true;
 	}
 
 	@Override
 	public void onRightClick()
 	{
-		isAlive = !isAlive;
+		isAlive = false;
 	}
 
 	@Override

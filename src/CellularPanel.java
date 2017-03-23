@@ -12,10 +12,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.io.File;
+import java.util.Scanner;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -42,6 +45,9 @@ public class CellularPanel extends JPanel
 	private int width;
 	private int height;
 
+	private int defaultWidth;
+	private int defaultHeight;
+
 	private Timer timer;
 
 	private int deltatime; // in milliseconds
@@ -67,7 +73,7 @@ public class CellularPanel extends JPanel
 			hbar = new JScrollBar(JScrollBar.HORIZONTAL);
 			vbar = new JScrollBar(JScrollBar.VERTICAL);
 
-			hbar.setPreferredSize(new Dimension((int)gameDimension.getWidth(), SCROLL_BAR_WIDTH));
+			hbar.setPreferredSize(new Dimension((int) gameDimension.getWidth(), SCROLL_BAR_WIDTH));
 			vbar.setPreferredSize(new Dimension(SCROLL_BAR_WIDTH, (int) gameDimension.getHeight() - SCROLL_BAR_WIDTH));
 
 			hbar.setUnitIncrement(1);
@@ -78,13 +84,15 @@ public class CellularPanel extends JPanel
 
 			hbar.addAdjustmentListener(new AdjustmentListener()
 			{
-				public void adjustmentValueChanged(AdjustmentEvent e) {
+				public void adjustmentValueChanged(AdjustmentEvent e)
+				{
 					getParent().repaint();
 				}
 			});
 			vbar.addAdjustmentListener(new AdjustmentListener()
 			{
-				public void adjustmentValueChanged(AdjustmentEvent e) {
+				public void adjustmentValueChanged(AdjustmentEvent e)
+				{
 					getParent().repaint();
 				}
 			});
@@ -95,7 +103,9 @@ public class CellularPanel extends JPanel
 			addMouseListener(new MouseListener()
 			{
 				@Override
-				public void mouseClicked(MouseEvent e) {}
+				public void mouseClicked(MouseEvent e)
+				{
+				}
 
 				@Override
 				public void mousePressed(MouseEvent e)
@@ -122,13 +132,19 @@ public class CellularPanel extends JPanel
 				}
 
 				@Override
-				public void mouseReleased(MouseEvent e) {}
+				public void mouseReleased(MouseEvent e)
+				{
+				}
 
 				@Override
-				public void mouseEntered(MouseEvent e) {}
+				public void mouseEntered(MouseEvent e)
+				{
+				}
 
 				@Override
-				public void mouseExited(MouseEvent e) {}
+				public void mouseExited(MouseEvent e)
+				{
+				}
 			});
 
 			addMouseWheelListener(new MouseWheelListener()
@@ -147,8 +163,8 @@ public class CellularPanel extends JPanel
 
 						//hbar.setValue((int)(gx * size - (gameDimension.getWidth() - SCROLL_BAR_WIDTH) / 2));
 						//vbar.setValue((int)(gy * size - (gameDimension.getHeight() - SCROLL_BAR_WIDTH) / 2));
-						hbar.setValue((int)(gx * size - e.getX()));
-						vbar.setValue((int)(gy * size - e.getY()));
+						hbar.setValue((int) (gx * size - e.getX()));
+						vbar.setValue((int) (gy * size - e.getY()));
 
 						getParent().repaint();
 					}
@@ -167,10 +183,11 @@ public class CellularPanel extends JPanel
 
 		}
 
-		public void updateBar()
+		public void updateZoom(int increment)
 		{
-			hbar.setMaximum((int)(width * size - (gameDimension.getWidth() - SCROLL_BAR_WIDTH) + hbar.getModel().getExtent()));
-			vbar.setMaximum((int)(height * size - (gameDimension.getHeight() - SCROLL_BAR_WIDTH) +  + vbar.getModel().getExtent()));
+			size = Math.min(Math.max(2, size + increment), 30);
+			hbar.setMaximum((int) (Math.max(width * size, gameDimension.getWidth() - SCROLL_BAR_WIDTH) - (gameDimension.getWidth() - SCROLL_BAR_WIDTH) + hbar.getModel().getExtent()));
+			vbar.setMaximum((int) (Math.max(height * size, gameDimension.getHeight() - SCROLL_BAR_WIDTH) - (gameDimension.getHeight() - SCROLL_BAR_WIDTH) + +vbar.getModel().getExtent()));
 		}
 
 		@Override
@@ -185,6 +202,7 @@ public class CellularPanel extends JPanel
 	public class MenuComponent extends JComponent
 	{
 
+		private JButton load;
 		private JButton reset;
 		private JButton start;
 		private JButton pause;
@@ -200,16 +218,38 @@ public class CellularPanel extends JPanel
 
 			setLayout(new FlowLayout());
 
+			load = new JButton("Load");
 			reset = new JButton("Reset");
 			start = new JButton("Start");
 			pause = new JButton("Pause");
 			pause.setEnabled(false);
 			next = new JButton("Next");
+			add(load);
 			add(reset);
 			add(start);
 			add(pause);
 			add(next);
 
+			load.addActionListener(new ActionListener()
+			{
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					JFileChooser fileChooser = new JFileChooser(System.getProperty("user.dir"));
+					int ret = fileChooser.showOpenDialog(getParent());
+					if (ret == JFileChooser.APPROVE_OPTION)
+					{
+						File file = fileChooser.getSelectedFile();
+						System.out.println("Opening: " + file.getName() + ".");
+
+						loadGrid(file);
+					}
+					else
+					{
+						System.out.println("Open command cancelled by user.");
+					}
+				}
+			});
 			start.addActionListener(new ActionListener()
 			{
 				@Override
@@ -307,13 +347,15 @@ public class CellularPanel extends JPanel
 	public CellularPanel(GameType gameType, Dimension d)
 	{
 		this.dimension = d;
-		this.gameDimension = new Dimension((int)dimension.getWidth(), (int)dimension.getHeight() - MENU_HEIGHT);
-		this.menuDimension = new Dimension((int)dimension.getWidth(), MENU_HEIGHT);
+		this.gameDimension = new Dimension((int) dimension.getWidth(), (int) dimension.getHeight() - MENU_HEIGHT);
+		this.menuDimension = new Dimension((int) dimension.getWidth(), MENU_HEIGHT);
 
 		this.gameType = gameType;
 
-		this.width = (int)(gameDimension.getWidth() - SCROLL_BAR_WIDTH) / 2;
-		this.height = (int)(gameDimension.getHeight() - SCROLL_BAR_WIDTH) / 2;
+		this.width = (int) (gameDimension.getWidth() - SCROLL_BAR_WIDTH) / 2;
+		this.height = (int) (gameDimension.getHeight() - SCROLL_BAR_WIDTH) / 2;
+		this.defaultWidth = this.width;
+		this.defaultHeight = this.height;
 
 		this.deltatime = 10;
 		this.size = 2;
@@ -329,7 +371,22 @@ public class CellularPanel extends JPanel
 
 	private void setupCellularGrid()
 	{
-		grid = new CellularGrid(gameType.getCellClass(), width, height, gameDimension);
+		grid = new CellularGrid(gameType.getCellClass(), defaultWidth, defaultHeight, gameDimension);
+	}
+
+	private void loadGrid(File f)
+	{
+		CellularGrid newGrid = CellularGrid.parseGrid(gameType, f, gameDimension);
+
+		if (newGrid != null)
+		{
+			System.out.println("NEW GRID LOADED");
+			width = newGrid.getWidth();
+			height = newGrid.getHeight();
+			grid = newGrid;
+
+			repaint();
+		}
 	}
 
 	private void setupTimer()
@@ -354,7 +411,6 @@ public class CellularPanel extends JPanel
 	public void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-
 	}
 
 	private void setupUI()
@@ -363,19 +419,10 @@ public class CellularPanel extends JPanel
 
 		gameComponent = new GameComponent();
 		add(gameComponent, BorderLayout.NORTH);
+		gameComponent.updateZoom(2);
 
 		menuComponent = new MenuComponent();
 		add(menuComponent, BorderLayout.SOUTH);
-
-		updateZoom(2);
-	}
-
-
-
-	private void updateZoom(int increment)
-	{
-		size = Math.min(Math.max(2, size + increment), 30);
-		gameComponent.updateBar();
 	}
 
 }

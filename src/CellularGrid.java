@@ -1,7 +1,9 @@
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.io.File;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 
@@ -24,9 +26,63 @@ public class CellularGrid<T extends ICell<T>>
 		initGrid(type);
 	}
 
+	public static CellularGrid<? extends ICell<?>> parseGrid(GameType gameType, File file, Dimension dim)
+	{
+		Scanner scan;
+		try
+		{
+			scan = new Scanner(file);
+		}
+		catch (Exception e)
+		{
+			System.out.println("Ouch!  Problem with file!! " + e);
+			return null;
+		}
+
+		int w = scan.nextInt();
+		int h = scan.nextInt();
+
+		CellularGrid newGrid = new CellularGrid(gameType.getCellClass(), w, h, dim);
+
+		int i = 0;
+		while (scan.hasNext())
+		{
+			int nv = scan.nextInt();
+			if (!newGrid.parseCell(i, nv))
+			{
+				return null;
+			}
+			++i;
+		}
+
+		System.out.println(i);
+
+		if (i != w * h)
+		{
+			return null;
+		}
+
+		scan.close();
+
+		return newGrid;
+	}
+
+	private boolean parseCell(int index, int value)
+	{
+		try
+		{
+			grid[index] = grid[index].makeNew(value);
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+		return grid[index] != null;
+	}
+
 	private void initGrid(Class<T> type)
 	{
-		grid = (T[])Array.newInstance(type, width * height);
+		grid = (T[]) Array.newInstance(type, width * height);
 		for (int i = 0; i < grid.length; i++)
 		{
 			try
@@ -50,8 +106,10 @@ public class CellularGrid<T extends ICell<T>>
 			{
 				T newCell = getCell(x, y).getNextState(this, x, y);
 
-				if (newCell == getCell(x, y)) throw new ValueException("ICell's getNextState(...) MUST RETURN A NEW INSTANCE");
-				if (newCell == null) throw new ValueException("ICell's getNextState(...) MUST NOT RETURN A NULL VALUE");
+				if (newCell == getCell(x, y))
+					throw new ValueException("ICell's getNextState(...) MUST RETURN A NEW INSTANCE");
+				if (newCell == null)
+					throw new ValueException("ICell's getNextState(...) MUST NOT RETURN A NULL VALUE");
 
 				newGrid[x + y * width] = newCell;
 			}
@@ -91,8 +149,8 @@ public class CellularGrid<T extends ICell<T>>
 
 	public void draw(Graphics g, int size, int xOffset, int yOffset)
 	{
-		int xgo = xOffset / size;
-		int ygo = yOffset / size;
+		int xgo = Math.max(0, xOffset / size);
+		int ygo = Math.max(0, yOffset / size);
 		int xgm = Math.min((int) (panelDim.getWidth() / size) + xgo + 1, width);
 		int ygm = Math.min((int) (panelDim.getHeight() / size) + ygo + 1, height);
 		for (int y = ygo; y < ygm; y++)
@@ -115,6 +173,16 @@ public class CellularGrid<T extends ICell<T>>
 			}
 			System.out.println();
 		}
+	}
+
+	public int getWidth()
+	{
+		return width;
+	}
+
+	public int getHeight()
+	{
+		return height;
 	}
 
 }

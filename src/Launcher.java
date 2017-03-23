@@ -9,9 +9,9 @@ public class Launcher
 	public static void main(String[] args)
 	{
 		JFrame frame = new JFrame();
-		Dimension d = new Dimension(640, 380);
-		//CellularPanel panel = new CellularPanel(GameType.CONWAYS_GAME_OF_LIFE, d);
-		CellularPanel panel = new CellularPanel(GameType.WIREWORLD, d);
+		Dimension d = new Dimension(640 * 3 / 2, 380 * 3 / 2);
+		CellularPanel panel = new CellularPanel(GameType.CONWAYS_GAME_OF_LIFE, d);
+		//CellularPanel panel = new CellularPanel(GameType.WIREWORLD, d);
 
 		frame.add(panel);
 		frame.pack();

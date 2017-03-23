@@ -11,6 +11,14 @@ public class WireworldCell implements ICell<WireworldCell>
 	private int state = 0;
 
 	@Override
+	public WireworldCell makeNew(int value)
+	{
+		WireworldCell c = new WireworldCell();
+		c.state = value;
+		return c;
+	}
+
+	@Override
 	public WireworldCell getNextState(CellularGrid<WireworldCell> grid, int x, int y)
 	{
 		WireworldCell newCell = new WireworldCell();
